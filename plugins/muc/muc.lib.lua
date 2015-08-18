@@ -763,13 +763,18 @@ function room_mt:handle_admin_query_get_command(origin, stanza)
 		-- You need to be at least an admin, and be requesting info about your affifiliation or lower
 		-- e.g. an admin can't ask for a list of owners
 		local affiliation_rank = valid_affiliations[affiliation];
-		if affiliation_rank >= valid_affiliations.admin and affiliation_rank >= _aff_rank then
-			local reply = st.reply(stanza):query("http://jabber.org/protocol/muc#admin");
-			for jid in self:each_affiliation(_aff or "none") do
-				reply:tag("item", {affiliation = _aff, jid = jid}):up();
-			end
-			origin.send(reply:up());
-			return true;
+		if affiliation_rank >= valid_affiliations.member and affiliation_rank >= _aff_rank then
+                        local reply = st.reply(stanza):query("http://jabber.org/protocol/muc#admin");
+                        for jid in self:each_affiliation(_aff or "none") do
+                                reply:tag("item", {affiliation = _aff, jid = jid}):up();
+                        end
+
+                        for jid in self:each_affiliation("owner") do
+                                reply:tag("item", {affiliation = _aff, jid = jid}):up();
+                        end
+
+                        origin.send(reply:up());
+                        return true;
 		else
 			origin.send(st.error_reply(stanza, "auth", "forbidden"));
 			return true;
@@ -1040,7 +1045,14 @@ function room_mt:set_affiliation(actor, jid, affiliation, reason)
 		actor = nil -- So we can pass it safely to 'publicise_occupant_status' below
 	else
 		local actor_affiliation = self:get_affiliation(actor);
-		if actor_affiliation == "owner" then
+		
+		log("debug","actor affiliation is %s", actor_affiliation)
+                log("debug","target affiliation is %s", tostring(affiliation))
+                if actor_affiliation == "member" and affiliation == nil then
+                        if jid_bare(actor) == jid then
+                                log("debug","User Removes self from the conference")
+                end
+                elseif actor_affiliation == "owner" then
 			if jid_bare(actor) == jid then -- self change
 				-- need at least one owner
 				local is_last = true;
