@@ -770,7 +770,7 @@ function room_mt:handle_admin_query_get_command(origin, stanza)
                         end
 
                         for jid in self:each_affiliation("owner") do
-                                reply:tag("item", {affiliation = _aff, jid = jid}):up();
+                                reply:tag("item", {affiliation = "owner", jid = jid}):up();
                         end
 
                         origin.send(reply:up());
