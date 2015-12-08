@@ -6,21 +6,20 @@ local send_message_as_push;
 
 module:hook("muc-broadcast-message", function (event)
 	module:log("info", "Received Group message");
-  local room, stanza = event.room, event.stanza;
+	local room, stanza = event.room, event.stanza;
 	local name, subject = room:get_subject();
 	local text = stanza:get_child_text("body");
-  if text then
-	  for jid in room:each_affiliation("member") do
-      if not room:get_occupant_jid(jid .. "/Work-PC") then
+	if text then
+		for jid in room:each_affiliation("member") do
+			if not room:get_occupant_jid(jid .. "/Work-PC") then
 				send_message_as_push(jid, jid_bare(stanza.attr.from), stanza.attr.id, stanza.attr.type, text, subject);	
 			end
 		end
-
-    for jid in room:each_affiliation("owner") do
-    	if not room:get_occupant_jid(jid .. "/Work-PC") then
-		    send_message_as_push(jid, jid_bare(stanza.attr.from), stanza.attr.id, stanza.attr.type, text, subject)
+		for jid in room:each_affiliation("owner") do
+    			if not room:get_occupant_jid(jid .. "/Work-PC") then
+		    		send_message_as_push(jid, jid_bare(stanza.attr.from), stanza.attr.id, stanza.attr.type, text, subject)
 			end
-  	end
+  		end
 	end
 end);
 
